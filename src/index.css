@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #fff7ed;
+  font-family: 'Inter', sans-serif;
+}
+
+::selection {
+  background-color: #fed7aa;
+  color: #9a3412;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.spice-gradient {
+  background: linear-gradient(135deg, #ea580c 0%, #b91c1c 100%);
+}
+
+@layer components {
+  .nav-link {
+    @apply text-primary-700 hover:text-primary-900 transition-colors;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-lg border border-primary-100 overflow-hidden hover:border-primary-200 transition-all duration-300 hover:shadow-xl;
+  }
+
+  .btn-spice {
+    @apply bg-spice-600 text-white hover:bg-spice-700 transition-colors;
+  }
+
+  .btn-curry {
+    @apply bg-curry-500 text-white hover:bg-curry-600 transition-colors;
+  }
+}
