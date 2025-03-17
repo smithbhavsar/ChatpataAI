@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Search, MessageCircle, ThumbsUp } from 'lucide-react';
+import { fetchAllRestaurants, fetchMenuByRestaurant } from '../api/index';
 
 interface MenuItem {
   id: number;
@@ -19,46 +20,25 @@ const RestaurantMenu = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showChat, setShowChat] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [restaurantName, setRestaurantName] = useState<string>(''); // Dynamic restaurant name
 
   useEffect(() => {
-    // Simulated API call to fetch restaurant menu and personalized recommendations
-    const fetchMenuWithRecommendations = async () => {
-      // In a real app, this would fetch from your backend
-      const items = [
-        {
-          id: 1,
-          name: 'Grilled Salmon Bowl',
-          description: 'Fresh salmon, quinoa, avocado, and seasonal vegetables',
-          price: 18.99,
-          image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800',
-          category: 'Healthy',
-          calories: 520,
-          recommended: true,
-        },
-        {
-          id: 2,
-          name: 'Vegetarian Buddha Bowl',
-          description: 'Roasted vegetables, chickpeas, brown rice, and tahini dressing',
-          price: 14.99,
-          image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800',
-          category: 'Vegetarian',
-          calories: 450,
-          recommended: true,
-        },
-        {
-          id: 3,
-          name: 'Spicy Chicken Ramen',
-          description: 'Rich broth, tender chicken, soft-boiled egg, and fresh noodles',
-          price: 16.99,
-          image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&q=80&w=800',
-          category: 'Asian',
-          calories: 680,
-        },
-      ];
-      setMenuItems(items);
+    const fetchData = async () => {
+      try {
+        // Fetch restaurant details
+        const restaurants = await fetchAllRestaurants();
+        const restaurant = restaurants.find((r: any) => r.id.toString() === restaurantId);
+        if (restaurant) setRestaurantName(restaurant.name);
+
+        // Fetch menu items
+        const menu = await fetchMenuByRestaurant(restaurantId!);
+        setMenuItems(menu);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     };
 
-    fetchMenuWithRecommendations();
+    fetchData();
   }, [restaurantId]);
 
   const filteredItems = menuItems.filter(item =>
@@ -69,7 +49,7 @@ const RestaurantMenu = () => {
   return (
     <div className="relative">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary-900 mb-4">Restaurant Menu</h1>
+        <h1 className="text-3xl font-bold text-primary-900 mb-4">{restaurantName} Menu</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-400 h-5 w-5" />
           <input
@@ -86,11 +66,7 @@ const RestaurantMenu = () => {
         {filteredItems.map((item) => (
           <div key={item.id} className="bg-white rounded-xl shadow-sm border border-primary-100 overflow-hidden hover:border-primary-200 transition-colors">
             <div className="relative">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-full h-48 object-cover"
-              />
+              <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
               {item.recommended && (
                 <div className="absolute top-2 right-2 bg-primary-700 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
                   <ThumbsUp className="h-4 w-4" />
@@ -131,12 +107,7 @@ const RestaurantMenu = () => {
         <div className="fixed bottom-20 right-6 w-96 bg-white rounded-xl shadow-lg border border-primary-200 overflow-hidden">
           <div className="p-4 border-b border-primary-100 flex justify-between items-center bg-primary-50">
             <h3 className="font-semibold text-primary-900">AI Assistant</h3>
-            <button
-              onClick={() => setShowChat(false)}
-              className="text-primary-500 hover:text-primary-700"
-            >
-              ×
-            </button>
+            <button onClick={() => setShowChat(false)} className="text-primary-500 hover:text-primary-700">×</button>
           </div>
           <div className="h-96 p-4 bg-white">
             <div className="bg-primary-50 rounded-lg p-3 mb-3">
