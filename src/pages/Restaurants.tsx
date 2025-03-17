@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Search, Leaf } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface Restaurant {
   id: string;
@@ -16,33 +17,23 @@ interface Restaurant {
 
 const API_BASE_URL = 'https://chatpata-ai-backend-production.up.railway.app';
 
+const fetchRestaurants = async (): Promise<Restaurant[]> => {
+  const response = await fetch(`${API_BASE_URL}/restaurants`);
+  if (!response.ok) throw new Error('Failed to fetch restaurants');
+  return response.json();
+};
+
 const Restaurants = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showVegOnly, setShowVegOnly] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/restaurants`);
-        if (!response.ok) throw new Error('Failed to fetch restaurants');
-
-        let data = await response.json();       
-
-        console.log(data);
-
-        setRestaurants(data);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRestaurants();
-  }, []);
+  
+  const { data: restaurants = [], isLoading, error } = useQuery({
+    queryKey: ['restaurants'],
+    queryFn: fetchRestaurants,
+    staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
+    cacheTime: 1000 * 60 * 10, // Store in cache for 10 minutes
+    retry: 2, // Retry failed requests up to 2 times
+  });
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     const matchesSearch =
@@ -53,8 +44,8 @@ const Restaurants = () => {
     return showVegOnly ? matchesSearch && restaurant.is_vegetarian : matchesSearch;
   });
 
-  if (loading) return <p className="text-center text-primary-700">Loading restaurants...</p>;
-  if (error) return <p className="text-center text-red-600">Error: {error}</p>;
+  if (isLoading) return <p className="text-center text-primary-700">Loading restaurants...</p>;
+  if (error) return <p className="text-center text-red-600">Error: {(error as Error).message}</p>;
 
   return (
     <div className="space-y-8">
