@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
@@ -34,13 +34,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   if (user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" />;
-  }
+    return <div className="text-center text-red-500 font-semibold">Access Denied</div>;
+  }  
 
   return <>{children}</>;
 };
 
 const App = () => {
+
+  const restoreSession = useAuthStore((state) => state.restoreSession);
+
+  useEffect(() => {
+    restoreSession(); // Restore session on page load
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>

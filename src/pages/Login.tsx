@@ -7,26 +7,30 @@ import { Phone } from 'lucide-react';
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
+  const login = useAuthStore((state) => state.login);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      setUser({
-        phoneNumber,
-        id: 'user-' + Date.now(),
-      });
-      
-      navigate('/'); // Redirect to home page after login
-    } catch (error) {
-      console.error('Login failed:', error);
+      const user = await login(phoneNumber); // Get user data
+
+      // Redirect based on user role
+      if (user?.role === 'waiter') {
+        navigate('/waiter-dashboard');
+      } else if (user?.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (user?.role === 'superadmin') {
+        navigate('/super-admin');
+      } else {
+        navigate('/'); // Default redirection
+      }
+    } catch (error: any) {
+      setError(error.message || 'Invalid phone number. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -40,10 +44,12 @@ const Login = () => {
             <Phone className="h-6 w-6 text-primary-700" />
           </div>
         </div>
-        
-        <h2 className="text-2xl font-bold text-center mb-6 text-primary-900">Login with Phone</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <h2 className="text-2xl font-bold text-center mb-6 text-primary-900">
+          Login with Phone
+        </h2>
+
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-primary-700 mb-1">
               Phone Number
@@ -58,18 +64,16 @@ const Login = () => {
               required
             />
           </div>
-          
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Continue'}
           </Button>
         </form>
-        
+
         <p className="mt-4 text-sm text-primary-600 text-center">
-          We'll send you a verification code to confirm your number
+          Enter your registered phone number to log in
         </p>
       </div>
     </div>

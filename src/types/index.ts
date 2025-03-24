@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   phoneNumber: string;
-  role: 'user' | 'waiter' | 'admin' | 'superadmin';
+  role: 'user' | 'waiter' | 'admin' | 'superadmin'
   loyaltyPoints?: number;
 }
 
