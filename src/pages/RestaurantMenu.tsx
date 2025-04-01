@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '../components/ui/button';
-import { Search, MessageCircle, ThumbsUp, X, Plus, Minus } from 'lucide-react';
+import { Search, X, Plus, Minus } from 'lucide-react';
 import { fetchAllRestaurants, fetchMenuByRestaurant } from '../api/index';
 import { Switch } from '@headlessui/react';
 import { useCartStore } from '../store/cartStore';
@@ -33,17 +33,6 @@ const RestaurantMenu = () => {
   });
 
   const { addToCart, updateQuantity, clearCart, cart } = useCartStore();
-
-  useEffect(() => {
-    if (currentRestaurant && currentRestaurant !== restaurantName) {
-      if (window.confirm('Switching restaurants will clear your cart. Do you want to proceed?')) {
-        clearCart(); 
-      } else {
-        return; 
-      }
-    }
-    setCurrentRestaurant(restaurantName);
-  }, [restaurantName, currentRestaurant, clearCart]);
 
   const filteredItems = menuItems
     .filter(item =>
