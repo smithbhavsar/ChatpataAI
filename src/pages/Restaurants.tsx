@@ -24,8 +24,8 @@ const Restaurants = () => {
     queryKey: ['restaurants'],
     queryFn: fetchAllRestaurants,
     staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Store in cache for 10 minutes
-    retry: 2, // Retry failed requests up to 2 times
+    cacheTime: 1000 * 60 * 10, // Keep data in cache for 10 minutes
+    retry: 1, // Retry failed requests up to 2 times
   });
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
