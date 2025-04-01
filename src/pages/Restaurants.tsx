@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fetchAllRestaurants } from '../api/index';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Search, Leaf } from 'lucide-react';
@@ -15,21 +16,13 @@ interface Restaurant {
   price_range: string;
 }
 
-const API_BASE_URL = 'https://chatpata-ai-backend-production.up.railway.app';
-
-const fetchRestaurants = async (): Promise<Restaurant[]> => {
-  const response = await fetch(`${API_BASE_URL}/restaurants`);
-  if (!response.ok) throw new Error('Failed to fetch restaurants');
-  return response.json();
-};
-
 const Restaurants = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showVegOnly, setShowVegOnly] = useState(false);
   
   const { data: restaurants = [], isLoading, error } = useQuery({
     queryKey: ['restaurants'],
-    queryFn: fetchRestaurants,
+    queryFn: fetchAllRestaurants,
     staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
     cacheTime: 1000 * 60 * 10, // Store in cache for 10 minutes
     retry: 2, // Retry failed requests up to 2 times
