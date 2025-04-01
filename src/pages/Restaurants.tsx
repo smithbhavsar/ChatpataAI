@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchAllRestaurants } from '../api/index';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -17,16 +17,28 @@ interface Restaurant {
 }
 
 const Restaurants = () => {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showVegOnly, setShowVegOnly] = useState(false);
   
-  const { data: restaurants = [], isLoading, error } = useQuery({
-    queryKey: ['restaurants'],
-    queryFn: fetchAllRestaurants,
-    staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
-    cacheTime: 1000 * 60 * 10, // Keep data in cache for 10 minutes
-    retry: 1, // Retry failed requests up to 2 times
-  });
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await fetchAllRestaurants();
+        setRestaurants(data);
+      } catch (err) {
+        setError((err as Error).message || 'An error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadRestaurants();
+  }, []);
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     const matchesSearch =
