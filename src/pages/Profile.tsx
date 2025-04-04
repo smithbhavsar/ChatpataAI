@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { supabase } from '../store/supabaseClient';
+import { getBills} from '../api/index';
 import { Button } from '../components/ui/button';
 import { User, Clock, Heart, Bell } from 'lucide-react';
 
@@ -14,42 +14,28 @@ interface Order {
 const Profile = () => {
   const user = useAuthStore((state) => state.user);
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
+  const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unbilledOrders, setUnbilledOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    
-    const fetchOrderHistory = async () => {
+
+    const fetchBills = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('id, date, items, total')
-          .eq('customer_phone', user.phone_number)  // Filter by logged-in user's phone number
-          .order('date', { ascending: false });  // Sort by latest orders first
-
-        if (error) {
-          console.error('Error fetching orders:', error.message);
-          return;
-        }
-
-        // Convert raw data into correct format
-        const formattedOrders = data.map((order: any) => ({
-          id: order.id,
-          date: order.date,
-          items: order.items.split(','), // Assuming items are stored as a comma-separated string
-          total: order.total,
-        }));
-
-        setOrderHistory(formattedOrders);
+        const data = await getBills("f6f5740c-d360-4939-8de7-24bc93f0abab"); // Assuming phone_number is used as customer_id
+        setBills(data);
+        console.log("Fetched bills:", data);
       } catch (error) {
-        console.error('Error fetching order history:', error);
+        console.error('Error fetching bills:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrderHistory();
+    fetchBills();
+
   }, [user]);
 
   return (
@@ -82,15 +68,18 @@ const Profile = () => {
         <div className="divide-y divide-primary-100">
           {loading ? (
             <p className="p-6 text-center text-primary-600">Loading order history...</p>
-          ) : orderHistory.length > 0 ? (
-            orderHistory.map((order) => (
-              <div key={order.id} className="p-6">
+          ) : bills.length > 0 ? (
+            bills.map((order) => (
+              <div key={order.bill_id} className="p-6">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-medium text-primary-900">{order.items.join(', ')}</p>
-                    <p className="text-sm text-primary-600">{order.date}</p>
+                    <p className="font-medium text-primary-900">Bill ID: {order.bill_id}</p>
+                    <p className="text-sm text-primary-600">
+                      Order Date: {new Date(order.generated_at).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-primary-600">Restaurant ID: {order.restaurant_id}</p>
                   </div>
-                  <p className="font-semibold text-primary-700">${order.total}</p>
+                  <p className="font-semibold text-primary-700">${parseFloat(order.total_amount).toFixed(2)}</p>
                 </div>
                 <Button variant="outline" size="sm">Reorder</Button>
               </div>
@@ -100,6 +89,35 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      
+      {/* Unbilled Orders Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-primary-100 overflow-hidden">
+        <div className="p-6 border-b border-primary-100 bg-primary-50">
+          <h3 className="text-xl font-semibold text-primary-900">Unbilled Orders</h3>
+        </div>
+        <div className="divide-y divide-primary-100">
+          {loading ? (
+            <p className="p-6 text-center text-primary-600">Loading unbilled orders...</p>
+          ) : unbilledOrders.length > 0 ? (
+            unbilledOrders.map((order) => (
+              <div key={order.id} className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="font-medium text-primary-900">{order.items.join(', ')}</p>
+                    <p className="text-sm text-primary-600">{order.date}</p>
+                  </div>
+                  <p className="font-semibold text-primary-700">${order.total}</p>
+                </div>
+                <Button variant="outline" size="sm">View Order</Button>
+              </div>
+            ))
+          ) : (
+            <p className="p-6 text-center text-primary-600">Coming sooooon....</p>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 };

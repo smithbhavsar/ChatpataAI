@@ -17,28 +17,13 @@ interface Restaurant {
 }
 
 const Restaurants = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showVegOnly, setShowVegOnly] = useState(false);
   
-  useEffect(() => {
-    const loadRestaurants = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await fetchAllRestaurants();
-        setRestaurants(data);
-      } catch (err) {
-        setError((err as Error).message || 'An error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadRestaurants();
-  }, []);
+  const { data: restaurants = [], isLoading, error } = useQuery<Restaurant[]>({
+    queryKey: ['restaurants'],
+    queryFn: fetchAllRestaurants,
+  });
 
   const filteredRestaurants = restaurants.filter((restaurant) => {
     const matchesSearch =

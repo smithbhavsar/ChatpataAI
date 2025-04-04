@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '../components/ui/button';
 import { Search, X, Plus, Minus } from 'lucide-react';
-import { fetchAllRestaurants, fetchMenuByRestaurant } from '../api/index';
+import { fetchAllRestaurants, fetchMenuByRestaurant, placeOrder } from '../api/index';
 import { Switch } from '@headlessui/react';
 import { useCartStore } from '../store/cartStore';
 import toast from 'react-hot-toast';
@@ -47,9 +47,11 @@ const RestaurantMenu = () => {
   return (
     <div className="relative">
       <div className="mb-8 flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-primary-900">{restaurantName} Menu</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-primary-900 font-medium">Veg Only</span>
+      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-900">
+        {restaurantName} Menu
+      </h1>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-3">
+          <span className="text-primary-900 font-medium text-sm">Veg Mode</span>
           <Switch
             checked={vegOnly}
             onChange={setVegOnly}
@@ -124,13 +126,15 @@ const RestaurantMenu = () => {
           );
         })}
       </div>
-
       {cart.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-primary-700 text-white px-6 py-3 rounded-full shadow-lg cursor-pointer hover:bg-primary-800 transition" onClick={() => setShowCartModal(true)}>
-          View Order ({cart.length} items) - ₹{cart.reduce((total, item) => total + item.price * item.quantity, 0)}
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-primary-700 text-white px-6 py-3 rounded-full shadow-lg cursor-pointer hover:bg-primary-800 transition text-sm whitespace-nowrap"
+          onClick={() => setShowCartModal(true)}
+        >
+          View Order ({cart.length} items) - ₹
+          {cart.reduce((total, item) => total + item.price * item.quantity, 0)}
         </div>
       )}
-
       {showCartModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white w-96 p-6 rounded-lg shadow-lg relative">
@@ -175,16 +179,39 @@ const RestaurantMenu = () => {
                 </h3>
               </div>
               <div className="flex justify-between gap-3">
-                <Button 
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 text-white transition-colors"
-                  onClick={() => {
-                    // Add your place order logic here
-                    console.log("Order placed!");
+              <Button 
+                className="flex-1 bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                onClick={async () => {
+                  try {
+                    // Extract required data for placing the order
+                    const customerId = "f6f5740c-d360-4939-8de7-24bc93f0abab"; //for testing purpose
+                    const currentRestaurantId = restaurantId;
+                    const cartItems = cart.map(item => ({
+                      menu_item_id: item.id,
+                      quantity: item.quantity,
+                      price: item.price,
+                    }));
+
+                    // Call placeOrder function
+                    if (!currentRestaurantId) {
+                      throw new Error("Restaurant ID is required to place an order.");
+                    }
+
+                    const orderResponse = await placeOrder(customerId, currentRestaurantId, cartItems);
+                    
+                    console.log("Order placed successfully:", orderResponse);
+
+                    // Clear cart and close modal after successful order
+                    clearCart();
                     setShowCartModal(false);
-                  }}
-                >
-                  Place Order
-                </Button>
+
+                  } catch (error) {
+                    console.error("Error placing order:", error);
+                  }
+                }}
+              >
+                Place Order
+              </Button>
               </div>
               <div className="text-center mt-3">
                 <button 
